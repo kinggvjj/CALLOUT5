@@ -1,0 +1,112 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Lighting = game:GetService("Lighting")
+
+local remote = ReplicatedStorage
+    :WaitForChild("events")
+    :WaitForChild("SneakRequestEvents")
+    :WaitForChild("SendSneakToServer")
+
+-- REMOVE OLD GUI
+if game.CoreGui:FindFirstChild("CallOutGUI") then
+    game.CoreGui.CallOutGUI:Destroy()
+end
+
+-- BLUR (LESS)
+local blur = Instance.new("BlurEffect")
+blur.Size = 18
+blur.Parent = Lighting
+
+-- SCREEN GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "CallOutGUI"
+ScreenGui.Parent = game.CoreGui
+
+-- OVERLAY (semi-transparent so text shows)
+local Overlay = Instance.new("Frame")
+Overlay.Parent = ScreenGui
+Overlay.Size = UDim2.new(1,0,1,0)
+Overlay.BackgroundColor3 = Color3.new(0,0,0)
+Overlay.BackgroundTransparency = 0.6
+
+-- MESSAGE TEXT
+local Text = Instance.new("TextLabel")
+Text.Parent = Overlay
+Text.Size = UDim2.new(0,300,0,50)
+Text.Position = UDim2.new(0.5,-150,0.5,-25)
+Text.BackgroundTransparency = 1
+Text.Text = "MADE BY BIG VJ"
+Text.TextColor3 = Color3.new(1,1,1)
+Text.TextScaled = true
+Text.Font = Enum.Font.SourceSansBold
+Text.ZIndex = 2
+
+-- Function to create the main GUI (only called after intro)
+local function createMainGUI()
+    local Frame = Instance.new("Frame")
+    Frame.Parent = ScreenGui
+    Frame.Size = UDim2.new(0,220,0,200)
+    Frame.Position = UDim2.new(0.05,0,0.3,0)
+    Frame.BackgroundColor3 = Color3.fromRGB(15,15,15)
+    Frame.BorderColor3 = Color3.fromRGB(255,0,0)
+    Frame.Active = true
+    Frame.Draggable = true
+
+    local Title = Instance.new("TextLabel")
+    Title.Parent = Frame
+    Title.Size = UDim2.new(1,0,0,25)
+    Title.Text = "CALL OUT"
+    Title.BackgroundColor3 = Color3.fromRGB(120,0,0)
+    Title.TextColor3 = Color3.new(1,1,1)
+    Title.Font = Enum.Font.SourceSansBold
+    Title.TextSize = 16
+
+    local Scroll = Instance.new("ScrollingFrame")
+    Scroll.Parent = Frame
+    Scroll.Size = UDim2.new(1,0,1,-25)
+    Scroll.Position = UDim2.new(0,0,0,25)
+    Scroll.BackgroundColor3 = Color3.fromRGB(20,20,20)
+    Scroll.BorderSizePixel = 0
+    Scroll.CanvasSize = UDim2.new(0,0,0,0)
+
+    local UIList = Instance.new("UIListLayout")
+    UIList.Parent = Scroll
+
+    -- ADD PLAYERS
+    local function addPlayer(plr)
+        if plr == Players.LocalPlayer then return end
+
+        local Btn = Instance.new("TextButton")
+        Btn.Parent = Scroll
+        Btn.Size = UDim2.new(1,0,0,25)
+
+        -- DisplayName + Username
+        Btn.Text = plr.DisplayName .. " (@" .. plr.Name .. ")"
+
+        Btn.BackgroundColor3 = Color3.fromRGB(40,0,0)
+        Btn.TextColor3 = Color3.new(1,1,1)
+        Btn.BorderColor3 = Color3.fromRGB(255,0,0)
+
+        Btn.MouseButton1Click:Connect(function()
+            remote:FireServer(plr)
+        end)
+    end
+
+    for _,p in pairs(Players:GetPlayers()) do
+        addPlayer(p)
+    end
+
+    Players.PlayerAdded:Connect(addPlayer)
+
+    UIList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        Scroll.CanvasSize = UDim2.new(0,0,0,UIList.AbsoluteContentSize.Y)
+    end)
+end
+
+-- SHOW INTRO FOR 1.5 SECONDS
+ScreenGui.Enabled = true
+task.delay(1.5, function()
+    blur:Destroy()
+    Overlay:Destroy()
+    createMainGUI()
+end)
